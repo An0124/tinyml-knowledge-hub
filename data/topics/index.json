@@ -53,6 +53,15 @@
       "level": "intermediate",
       "tags": ["Checkpointing", "Recovery", "Consistency"],
       "updatedAt": "2026-11-12"
+    },
+    {
+      "slug": "model-quantization",
+      "title": "Model Quantization（模型量化）",
+      "category": "fundamentals",
+      "summary": "認識模型量化如何以低精度數值減少儲存需求。理解 INT8、PTQ 與 QAT 的原理，以及模型品質和部署成本的取捨。",
+      "level": "beginner",
+      "tags": ["Quantization", "INT8", "PTQ", "QAT"],
+      "updatedAt": "2026-11-12"
     }
   ]
 }

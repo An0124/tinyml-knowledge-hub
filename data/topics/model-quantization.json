@@ -1,0 +1,86 @@
+{
+  "slug": "model-quantization",
+  "overview": "Model Quantization（模型量化）以較低精度的數值表示模型權重或中間運算資料，協助模型適應 TinyML（微型機器學習）裝置的資源限制。本篇介紹整數量化的原理、常見流程與教學算例，並說明如何評估量化後的品質和部署成本。",
+  "sections": [
+    {
+      "id": "definition",
+      "heading": "定義與背景",
+      "paragraphs": [
+        "模型量化將數值映射到有限的表示集合。例如，把 FP32（32 位元浮點數）權重改用 INT8（8 位元有號整數）近似表示，可減少權重的儲存需求；若目標執行環境有對應的整數運算核心，也可能改善推論延遲與能耗。是否有效仍要在目標 MCU（微控制器）上量測。",
+        "量化會引入近似誤差，與直接刪除連結或參數的 Pruning（模型剪枝）不同。Weight-only Quantization（僅權重量化）只改變權重表示；若要採用整數推論，還須確認 Activation（中間活化值）、輸入輸出與運算子支援的格式，不能看到 INT8 權重就認定整個模型都以整數執行。"
+      ],
+      "bullets": [
+        "Post-training Quantization（訓練後量化，PTQ）：從已訓練模型進行量化；靜態活化值量化通常需要代表性資料校正範圍。",
+        "Quantization-aware Training（量化感知訓練，QAT）：在訓練或微調時模擬量化效果，讓參數適應誤差；完成後仍需匯出實際量化模型，並驗證部署相容性。"
+      ],
+      "example": ""
+    },
+    {
+      "id": "mechanism",
+      "heading": "核心原理與量化流程",
+      "paragraphs": [
+        "以常見的 Affine Quantization（仿射量化）為例，浮點值 x 與量化整數 q 的近似關係為 x ≈ (q − zero_point) × scale。scale（縮放係數）是正數，決定相鄰整數代表的數值間距；zero_point（零點）是代表實數 0 的整數。量化時可先計算 round(x / scale) + zero_point，再限制到允許的整數範圍。",
+        "INT8 可表示 −128 到 127，但個別運算子可有額外限制。例如 LiteRT 的一般 INT8 權重規格使用 −127 到 127，且 zero_point 為 0。Per-tensor Quantization（逐張量量化）為整個張量共用參數；Per-axis Quantization（逐軸量化）則可為不同切片使用不同參數，卷積中常以輸出通道為單位。實際支援方式須依運算子規格確認。"
+      ],
+      "bullets": [
+        "建立浮點模型基準，保留獨立的評估資料。",
+        "確認目標執行環境與硬體支援的位元數、運算子及量化方式。",
+        "採用靜態 PTQ 時，以符合實際輸入分布與前處理的 Representative Dataset（代表性資料集）進行 Calibration（校正），估計活化值範圍；校正資料不等於最終品質評估資料。",
+        "產生量化模型後，依模型記錄的輸入 scale 與 zero_point 處理資料，並比較量化前後的任務品質。",
+        "在目標裝置量測模型大小、峰值記憶體、延遲與能耗；若品質不符需求，再檢查校正資料、調整量化設定或評估 QAT。"
+      ],
+      "example": ""
+    },
+    {
+      "id": "example",
+      "heading": "實際範例",
+      "paragraphs": [
+        "假設某個 INT8 輸入張量使用 scale = 0.1、zero_point = 0。將 x = 0.26 量化後得到 q = round(0.26 / 0.1) = 3；換回近似實數得到 3 × 0.1 = 0.3，與原值相差 0.04。這說明有限的表示間距會產生捨入誤差。若輸入超出可表示範圍，還會發生 Clipping（截斷），誤差可能更大。",
+        "再假設一個小型模型有 1,000 個權重，每個權重由 4 bytes 的 FP32 改為 1 byte 的 INT8，純權重資料會由 4,000 bytes 減少到 1,000 bytes。這個算式沒有計入縮放參數、偏置、模型中繼資料、程式碼或執行時緩衝區，因此不代表整個模型檔或應用程式一定縮小為四分之一。",
+        "以手勢分類器為例，可先用代表性的感測訊號校正量化範圍，再用另外保留的手勢資料比較各類別表現與誤判情況，最後到開發板確認延遲及記憶體是否符合需求。"
+      ],
+      "bullets": [],
+      "example": "以上 scale、輸入值、權重數量與手勢情境均為自訂教學示例，不是特定開發板規格或論文實測結果。不能據此推算實際準確率、加速倍率或節能比例。"
+    },
+    {
+      "id": "limitations",
+      "heading": "適用情境與限制",
+      "paragraphs": [
+        "量化適合需要減少模型儲存需求，且目標平台提供相容量化運算子的部署情境。對誤差敏感的模型或少見輸入，量化後的品質變化可能較大；校正資料未涵蓋實際輸入範圍時，也可能增加截斷誤差。",
+        "QAT 可以讓模型在訓練中適應量化效果，但需要額外訓練資源，也不能保證保留原有品質。量化工具產生的模型，仍須檢查是否符合 MCU 執行環境的運算子與格式要求。"
+      ],
+      "bullets": [
+        "整數推論不表示所有暫存資料都只有 8 位元；部分運算子的偏置或累加值會使用較寬的型別，例如 INT32（32 位元整數）。",
+        "權重變小不保證整個應用的 SRAM（靜態隨機存取記憶體）以相同比例減少，還須計入中間張量、暫存與其他應用資料。",
+        "未受支援的運算子可能讓轉換失敗；若執行環境允許浮點回退，也可能無法達成預期的整數部署目標。",
+        "需要比較完整應用的延遲與能耗；額外的量化、反量化或資料搬移可能抵銷部分收益。",
+        "量化是數值表示與運算的最佳化方法，不會自動解決資料分布改變、裝置端學習或斷電恢復問題。"
+      ],
+      "example": ""
+    }
+  ],
+  "keyTakeaways": [
+    "理解 scale 與 zero_point 如何連接整數和近似實數，並能辨識捨入與截斷誤差。",
+    "能分辨 PTQ、QAT 與僅權重量化，知道整數部署還要確認活化值及運算子格式。",
+    "使用獨立評估資料及目標硬體實測，同時檢查量化後的品質、儲存、記憶體、延遲與能耗。"
+  ],
+  "references": [
+    {
+      "title": "Google AI Edge 官方文件：LiteRT Model Optimization（量化類型與取捨）",
+      "url": "https://developers.google.com/edge/litert/quantization/model_optimization"
+    },
+    {
+      "title": "Google AI Edge 官方文件：LiteRT 8-bit Quantization Specification（scale、zero_point 與運算子規格）",
+      "url": "https://developers.google.com/edge/litert/conversion/tensorflow/quantization/quantization_spec"
+    },
+    {
+      "title": "TensorFlow Model Optimization 官方文件：Quantization Aware Training",
+      "url": "https://www.tensorflow.org/model_optimization/guide/quantization/training"
+    },
+    {
+      "title": "Google AI Edge 官方文件：Post-training Quantization（校正原理；舊轉換流程已標示棄用）",
+      "url": "https://developers.google.com/edge/litert/conversion/tensorflow/quantization/post_training_quantization"
+    }
+  ],
+  "related": ["tinyml-overview", "mcu-resource-constraints", "on-device-learning-overview"]
+}
