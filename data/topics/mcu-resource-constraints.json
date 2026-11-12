@@ -1,0 +1,40 @@
+{
+  "slug": "mcu-resource-constraints",
+  "overview": "在 MCU（微控制器）上部署模型，需要同時考慮儲存空間、執行時記憶體、速度與能耗。本篇帶你分清 Flash 與 SRAM，並學會從完整應用的角度估算資源。",
+  "sections": [
+    {
+      "id": "definition",
+      "heading": "定義與背景",
+      "paragraphs": ["Flash（快閃記憶體）通常用來保存韌體與唯讀模型資料；SRAM（靜態隨機存取記憶體）則通常承載運算中的可變資料。SRAM 是揮發性記憶體，斷電後無法保留一般執行狀態。實際記憶體配置仍須依晶片與工具鏈確認。", "模型權重不是執行時唯一需要的空間。輸入、輸出、Activation（中間活化值）、暫存區、堆疊，以及通訊與感測器緩衝區，都可能同時佔用資源。"],
+      "bullets": [],
+      "example": ""
+    },
+    {
+      "id": "mechanism",
+      "heading": "核心原理與記憶體配置",
+      "paragraphs": ["TFLM 的 Tensor Arena（張量記憶體區）使用一段共用空間管理模型執行所需的記憶體。官方文件將其區分為 head、temporary 與 tail 等區域，分別處理規劃後的張量空間、短期配置與持續存在的資料。", "Memory Planner（記憶體規劃器）可以讓生命週期不重疊的張量重用空間，但仍須以實際模型的峰值需求決定配置。Arena 的大小也不是整個應用的 SRAM 使用量。"],
+      "bullets": ["先從連結器報告確認程式碼、模型與靜態資料大小。", "以執行環境的記憶體紀錄工具觀察配置，再保留應用與堆疊所需空間。", "在目標 MCU 量測完整處理流程；相同運算量也可能因核心與核心函式庫不同而有不同延遲。"],
+      "example": ""
+    },
+    {
+      "id": "example",
+      "heading": "實際範例",
+      "paragraphs": ["假設一個教學裝置有 128 KiB 可用 SRAM，推論 arena 使用 80 KiB，感測器緩衝區使用 16 KiB，其他靜態資料使用 12 KiB，則只剩 20 KiB 給堆疊與其他需求。這時即使模型權重放得進 Flash，也不能直接判定整個程式能安全運作。", "若雙緩衝取樣又新增一個 16 KiB 區塊，餘裕會降至 4 KiB。可考慮降低輸入大小、縮短訊號窗或調整模型，但每項變更都要重新量測並評估預測品質。"],
+      "bullets": [],
+      "example": "這些容量是自行設計的算術示例，不是特定開發板的規格或實測數據。1 KiB 等於 1,024 bytes；估算時應避免混用 KB 與 KiB。"
+    },
+    {
+      "id": "limitations",
+      "heading": "適用情境與限制",
+      "paragraphs": ["資源盤點適用於選板、模型設計與部署除錯，但單一指標無法代表整體可行性。省下記憶體的方法可能增加重算時間，降低延遲的方法也可能增加功耗。"],
+      "bullets": ["支援的運算子、資料型別與硬體加速能力需要逐一確認。", "不能只用模型檔大小推估 SRAM，也不能只用時脈推估延遲。", "要在最忙碌的應用情境測試，例如通訊與感測同時執行。", "裝置端訓練還需要梯度與訓練狀態，應另做預算。"],
+      "example": ""
+    }
+  ],
+  "keyTakeaways": ["分清 Flash 儲存需求與 SRAM 執行需求。", "理解 tensor arena 與整個應用的記憶體用量不同。", "學會同時檢查容量、運算子支援、實測延遲與能耗。"],
+  "references": [
+    {"title": "TFLM 官方文件：Memory Management in TensorFlow Lite Micro", "url": "https://github.com/tensorflow/tflite-micro/blob/main/docs/memory_management.md"},
+    {"title": "TensorFlow Lite Micro: Embedded Machine Learning on TinyML Systems（論文）", "url": "https://arxiv.org/abs/2010.08678"}
+  ],
+  "related": ["tinyml-overview", "sparse-update"]
+}

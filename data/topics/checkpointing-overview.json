@@ -1,0 +1,41 @@
+{
+  "slug": "checkpointing-overview",
+  "overview": "Checkpointing（檢查點保存）將必要執行狀態留在可跨斷電保留的儲存空間，讓系統下次恢復進度。本篇介紹保存、驗證與恢復的思路，並區分間歇運算與機器學習中不同的檢查點用途。",
+  "sections": [
+    {
+      "id": "definition",
+      "heading": "定義與背景",
+      "paragraphs": ["在間歇運算中，檢查點代表一個可恢復的執行狀態。依系統設計，內容可能包括暫存器、堆疊、必要的記憶體資料與進度資訊。Mementos 透過能量檢查與狀態保存，支援計算跨越多次供電。", "名稱相同不代表目的相同。訓練模型時保存權重的 checkpoint，主要用於保存訓練成果；Activation Checkpointing（活化值檢查點）則以重算換取較少的活化值儲存。它們都不自動等於完整的 MCU 斷電恢復。"],
+      "bullets": [],
+      "example": ""
+    },
+    {
+      "id": "mechanism",
+      "heading": "核心原理與恢復流程",
+      "paragraphs": ["一個可恢復的設計，需要先界定保存邊界與完整狀態，再確保保存過程中斷也能辨識有效版本。恢復時只能使用完整且一致的檢查點。觸發保存可依工作邊界或能源狀態設計，但不能假設每次都來得及寫完。", "DINO 的研究提醒我們：回復揮發性狀態時，還需處理先前已改寫的非揮發性資料。資料版本與重複執行的語意，是正確性的一部分。"],
+      "bullets": ["選定邊界：確認有哪些運算已完成，哪些狀態必須共同保存。", "寫入與提交：先保留舊的有效狀態，完成新狀態後才將它標為可恢復。", "啟動檢查：辨識有效版本，再恢復對應的執行狀態。", "持續前進：允許必要的重算，並避免重算破壞一致性。"],
+      "example": ""
+    },
+    {
+      "id": "example",
+      "heading": "實際範例",
+      "paragraphs": ["以分段計算感測資料為例，假設狀態是「已完成區塊編號、累計結果」。教學上可設計 A、B 兩個儲存區：A 保持舊版本，先把新編號與新結果寫到 B，確認完成後才提交 B。下次啟動選擇有效的最新版本。", "若寫到一半就斷電，應仍能使用 A。若外部訊息已送出，但傳送完成的狀態尚未保存，恢復後卻可能再送一次；此時還需要訊息識別碼與接收端去重等應用協定。"],
+      "bullets": [],
+      "example": "雙儲存區是說明提交概念的自訂示意，不是完整可直接上板的演算法。有效標記的原子性、寫入順序與斷電行為，必須依硬體保證設計並測試。"
+    },
+    {
+      "id": "limitations",
+      "heading": "適用情境與限制",
+      "paragraphs": ["檢查點適合有必要保留中間成果、且有足夠能源完成保存的工作。保存太頻繁會增加寫入成本；間隔過長又可能重做大量工作，甚至每次都在到達下一個保存點之前斷電。"],
+      "bullets": ["較小的保存狀態可降低成本，但不能省略恢復所必需的資料。", "要在寫入、提交、恢復等不同位置注入斷電測試。", "檢查碼可協助偵測部分損壞，但不能單獨保證原子提交或語意一致。", "保存 CPU 與記憶體狀態無法自動還原外部世界，感測器與周邊也可能需要重新初始化。"],
+      "example": ""
+    }
+  ],
+  "keyTakeaways": ["能區分執行狀態保存、模型權重保存與活化值重算。", "理解檢查點必須完整、一致，且能辨識中斷的寫入。", "同時評估保存成本、可用能源與重做工作的代價。"],
+  "references": [
+    {"title": "Mementos: System Support for Long-Running Computation on RFID-Scale Devices（原始論文）", "url": "https://web.eecs.umich.edu/~kevinfu/papers/ransford-mementos-asplos11.pdf"},
+    {"title": "DINO: A Simpler, Safer Programming and Execution Model for Intermittent Systems（原始論文）", "url": "https://course.ece.cmu.edu/~ece742/S23/paper_pdfs/dino.pdf"},
+    {"title": "PyTorch 官方文件：Activation Checkpointing（活化值重算的用途）", "url": "https://docs.pytorch.org/docs/2.15/checkpoint.html"}
+  ],
+  "related": ["intermittent-computing-overview", "sparse-update"]
+}

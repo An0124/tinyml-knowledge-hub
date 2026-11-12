@@ -1,0 +1,58 @@
+{
+  "topics": [
+    {
+      "slug": "tinyml-overview",
+      "title": "TinyML 是什麼？",
+      "category": "fundamentals",
+      "summary": "讓機器學習走進微控制器。認識 TinyML 的工作流程、應用情境，以及小裝置面對的挑戰。",
+      "level": "beginner",
+      "tags": ["TinyML", "MCU", "Inference"],
+      "updatedAt": "2026-11-12"
+    },
+    {
+      "slug": "mcu-resource-constraints",
+      "title": "MCU 記憶體與運算資源限制",
+      "category": "fundamentals",
+      "summary": "模型放得下，不代表跑得動。分清 Flash、SRAM 與運算成本，理解部署時真正需要估算的資源。",
+      "level": "beginner",
+      "tags": ["MCU", "SRAM", "Tensor Arena"],
+      "updatedAt": "2026-11-12"
+    },
+    {
+      "slug": "on-device-learning-overview",
+      "title": "On-device Learning 入門",
+      "category": "on-device-learning",
+      "summary": "裝置不只做預測，也能從新資料調整模型。理解裝置端學習的訓練流程，以及它與推論的差異。",
+      "level": "beginner",
+      "tags": ["Training", "Backpropagation", "Personalization"],
+      "updatedAt": "2026-11-12"
+    },
+    {
+      "slug": "sparse-update",
+      "title": "Sparse Update 的目的與運作",
+      "category": "on-device-learning",
+      "summary": "在有限記憶體裡，只更新模型的一部分。探索稀疏更新如何減少訓練成本，以及需要取捨的適應能力。",
+      "level": "intermediate",
+      "tags": ["Sparse Update", "Gradient", "Memory"],
+      "updatedAt": "2026-11-12"
+    },
+    {
+      "slug": "intermittent-computing-overview",
+      "title": "Intermittent Computing 是什麼？",
+      "category": "intermittent-computing",
+      "summary": "當電力時有時無，程式如何繼續前進？認識能量採集、間歇執行與斷電後的狀態一致性。",
+      "level": "beginner",
+      "tags": ["Energy Harvesting", "Batteryless", "Persistence"],
+      "updatedAt": "2026-11-12"
+    },
+    {
+      "slug": "checkpointing-overview",
+      "title": "Checkpointing 與斷電恢復",
+      "category": "intermittent-computing",
+      "summary": "把運算進度安全留下來。了解檢查點的保存與恢復流程，以及能量、寫入成本和一致性之間的平衡。",
+      "level": "intermediate",
+      "tags": ["Checkpointing", "Recovery", "Consistency"],
+      "updatedAt": "2026-11-12"
+    }
+  ]
+}

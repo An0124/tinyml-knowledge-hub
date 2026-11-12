@@ -1,0 +1,40 @@
+{
+  "slug": "intermittent-computing-overview",
+  "overview": "Intermittent Computing（間歇運算）研究如何在供電反覆中斷時，讓程式維持正確性並累積進度。本篇介紹能量採集裝置的執行特性，以及跨越斷電需要面對的問題。",
+  "sections": [
+    {
+      "id": "definition",
+      "heading": "定義與背景",
+      "paragraphs": ["Energy Harvesting（能量採集）裝置從光、振動或射頻等來源取得能量，常透過電容暫存。當消耗速度超過補充速度，供電可能降到無法維持執行的程度，裝置便會斷電。", "間歇運算把反覆斷電視為正常執行條件。目標不只是重新啟動，而是讓多次短暫供電共同完成有用工作，並保留正確的程式語意。這與有穩定電源、可預期喚醒的休眠排程不同。"],
+      "bullets": [],
+      "example": ""
+    },
+    {
+      "id": "mechanism",
+      "heading": "核心原理與執行架構",
+      "paragraphs": ["基本循環可以理解成蓄能、啟動或恢復、執行部分工作、保存必要狀態，再等待下一次供電。Checkpointing（檢查點保存）可把選定執行狀態寫入非揮發性記憶體；以任務為單位的系統則可明確定義跨任務的持久資料。", "只保存部分記憶體並不一定正確。DINO 論文指出，揮發性狀態回復與已寫入的非揮發性狀態若不一致，可能產生持續供電時不會出現的結果。重做運算也可能重複外部輸出。"],
+      "bullets": ["Forward Progress（向前進展）：跨多次啟動累積已完成的工作。", "Consistency（一致性）：恢復後的狀態必須符合設計的執行語意。", "能源可行性：一次供電至少需要完成可保存的工作單位與必要寫入。"],
+      "example": ""
+    },
+    {
+      "id": "example",
+      "heading": "實際範例",
+      "paragraphs": ["假設無電池的環境感測器要累積多筆讀值後計算平均值。若只把累加值留在 SRAM（靜態隨機存取記憶體），每次斷電都會失去進度。可設計在適當邊界保存累加值、樣本數與資料批次識別。", "恢復時必須讓三者對應同一個已完成的進度，避免同一筆樣本被重複加總。若斷電期間未取樣，也不能把重新啟動後的資料當成連續時間序列。"],
+      "bullets": [],
+      "example": "這是自訂的教學情境。它用來說明進度與一致性問題，不代表現成系統已保證取樣完整或平均值無偏差。"
+    },
+    {
+      "id": "limitations",
+      "heading": "適用情境與限制",
+      "paragraphs": ["間歇運算適合能容忍等待與分段執行的低功耗應用。若工作要求持續取樣或嚴格的完成期限，僅靠不可預期的能量採集通常需要額外的儲能或供電設計。"],
+      "bullets": ["保存與恢復本身也消耗能量，過大的工作單位可能反覆失敗。", "非揮發性記憶體仍有容量、寫入時間、能耗與耐久度等限制。", "通訊、感測與致動的外部效果需要另外處理，無法單靠記憶體回復撤銷。", "TinyML 的記憶體最佳化與間歇運算的能源管理相互關聯，但解決的是不同問題。"],
+      "example": ""
+    }
+  ],
+  "keyTakeaways": ["理解能量採集可能讓程式反覆啟動與中斷。", "知道跨斷電的進度保存必須同時考慮一致性。", "能判斷應用是否容許等待、資料缺口與分段執行。"],
+  "references": [
+    {"title": "Mementos: System Support for Long-Running Computation on RFID-Scale Devices（原始論文）", "url": "https://web.eecs.umich.edu/~kevinfu/papers/ransford-mementos-asplos11.pdf"},
+    {"title": "DINO: A Simpler, Safer Programming and Execution Model for Intermittent Systems（原始論文）", "url": "https://course.ece.cmu.edu/~ece742/S23/paper_pdfs/dino.pdf"}
+  ],
+  "related": ["checkpointing-overview", "tinyml-overview"]
+}
